@@ -28,21 +28,15 @@ GEM
     activesupport (3.2.13)
       i18n (= 0.6.1)
       multi_json (~> 1.0)
-    airbrake (5.2.3)
-      airbrake-ruby (~> 1.2)
-    airbrake-ruby (1.2.4)
     arel (3.0.3)
-    autoprefixer-rails (6.3.6)
-      execjs
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
       rack (>= 0.9.0)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
-    bootstrap-sass (3.3.6)
-      autoprefixer-rails (>= 5.2.1)
-      sass (>= 3.3.4)
+    bootstrap-sass (3.1.1.0)
+      sass (~> 3.2)
     builder (3.0.4)
     coderay (1.1.1)
     coffee-rails (3.2.2)
@@ -137,10 +131,9 @@ PLATFORMS
   x86-mingw32
 
 DEPENDENCIES
-  airbrake
   better_errors
   binding_of_caller
-  bootstrap-sass
+  bootstrap-sass (= 3.1.1.0)
   coffee-rails (~> 3.2.1)
   colorbox-rails
   font-awesome-rails

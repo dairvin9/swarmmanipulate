@@ -6,10 +6,9 @@ gem 'rails', '3.2.13'
 gem 'gon'
 gem 'jquery-rails'
 gem 'sass-rails',   '~> 3.2.3'
-gem 'bootstrap-sass'
+gem 'bootstrap-sass', '3.1.1.0'
 gem 'underscore-rails'
 gem 'colorbox-rails'
-gem 'airbrake'
 gem 'font-awesome-rails'
 
 # In development we'd like better errors
