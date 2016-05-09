@@ -162,11 +162,12 @@ var varyingControlTask = _.extend({}, baseTask, attractiveController, repulsiveC
 
         var contactListener = new Box2D.Dynamics.b2ContactListener;
         contactListener.BeginContact = function(contact, manifold) {
-
+		console.log("I hit a workpiece!");
            if(   contact.m_fixtureA.m_body.m_userData == 'robot' &&
                  contact.m_fixtureB.m_body.m_userData == 'workpiece')
             {
-                contact.m_fixtureA.m_body.m_userData = 'contact';
+                console.log("I hit a workpiece!");
+				contact.m_fixtureA.m_body.m_userData = 'contact';
                 contact.m_fixtureA.m_shape.m_radius = contact.m_fixtureA.m_shape.m_radius*1.5;
                 contact.m_fixtureB.m_body.m_userData = 'empty';
                 contact.m_fixtureA.m_body.foodx = contact.m_fixtureB.m_body.GetPosition().x;
@@ -175,6 +176,16 @@ var varyingControlTask = _.extend({}, baseTask, attractiveController, repulsiveC
            else if( contact.m_fixtureA.m_body.m_userData == 'workpiece' &&
                  contact.m_fixtureB.m_body.m_userData == 'robot') 
            { 
+            contact.m_fixtureB.m_body.m_userData = 'contact';
+            contact.m_fixtureA.m_body.m_userData = 'empty';
+            contact.m_fixtureB.m_shape.m_radius = contact.m_fixtureB.m_shape.m_radius*1.5;
+            contact.m_fixtureB.m_body.foodx = contact.m_fixtureA.m_body.GetPosition().x;
+            contact.m_fixtureB.m_body.foody = contact.m_fixtureA.m_body.GetPosition().y;
+           }
+		   else if( contact.m_fixtureA.m_body.m_userData == 'red_mat' &&
+                 contact.m_fixtureB.m_body.m_userData == 'robot') 
+           { 
+		    console.log("I hit the red mat!");
             contact.m_fixtureB.m_body.m_userData = 'contact';
             contact.m_fixtureA.m_body.m_userData = 'empty';
             contact.m_fixtureB.m_shape.m_radius = contact.m_fixtureB.m_shape.m_radius*1.5;

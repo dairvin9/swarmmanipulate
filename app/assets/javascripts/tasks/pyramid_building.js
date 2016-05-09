@@ -301,7 +301,8 @@ evaluateCompletion: function( options ) {
                 if( pos.y < miny)
                     {miny = pos.y;}
             }
-            color = that.colorRobot;
+            color = that.
+			;
             drawutils.drawText(30*(meanx),30*(miny-1),"Robots", 1.5, color, color);
 
             color = that.colorObstacle;

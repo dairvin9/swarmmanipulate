@@ -10,12 +10,13 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
     +' <p> We keep the total area, maximum robot speed, and sum force the swarm can produce constant.'
     +' See <a href="http://www.youtube.com/watch?v=px5RdSvGD2Q"> our video of robots pushing a model piano</a>, or '
     +' <a href="https://sites.google.com/site/aabecker/Becker2013b.pdf">our paper</a>  for details.'
-    + '<iframe width="270" height="295" src="//www.youtube.com/embed/px5RdSvGD2Q" frameborder="0" allowfullscreen></iframe> '
+    // + '<iframe width="270" height="295" src="//www.youtube.com/embed/px5RdSvGD2Q" frameborder="0" allowfullscreen></iframe> '
     +"</p>",
 
     //_numrobots: Math.floor((Math.random()*500)+1),                                           // number of robots
     _numrobots: 75,											// probably a good number of robots.
 	_robotRadius: 0.5,
+	_mats: [],												// array of the mats which change the robots response to action
     _robots: [],                                            // array of bodies representing the robots
     _blocks: [],                                            // array of bodies representing workpieces
     _goals: [],                                             // array of goals where blocks should go
@@ -45,8 +46,7 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
         // create bottom wall
         bodyDef.position.Set(10, 20-this.obsThick);
         this._world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-        // create top wall
+		// create top wall
         bodyDef.position.Set(10, this.obsThick);
         this._world.CreateBody(bodyDef).CreateFixture(fixDef);
 
@@ -56,8 +56,7 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
         // create left wall
         bodyDef.position.Set(this.obsThick, 10);
         this._world.CreateBody(bodyDef).CreateFixture(fixDef);
-
-        // create right wall
+		// create right wall
         bodyDef.position.Set(20-this.obsThick, 10);
         this._world.CreateBody(bodyDef).CreateFixture(fixDef);
 
@@ -71,8 +70,6 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
         // create mid upper wall
         bodyDef.position.Set(-5, 13.33);
         this._world.CreateBody(bodyDef).CreateFixture(fixDef);
-        
-
 
         // create block
         // This defines a hexagon in CCW order.
@@ -114,8 +111,28 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
         //fixDef.shape.SetAsBox(3,2.9);
         fixDef.shape = new phys.circleShape(3); 
         this._goals[0].CreateFixture(fixDef);
-
-        // create some robots
+		
+		// create the blue mat
+        bodyDef.type = phys.body.b2_dynamicBody;
+        bodyDef.userData = "blue_mat";
+        bodyDef.position.Set(1.5,3.35);
+        this._mats.push( this._world.CreateBody(bodyDef) );
+        fixDef.isSensor = true;
+		fixDef.shape = new phys.polyShape;
+		fixDef.shape.SetAsBox(1,9.75); 
+        this._mats[0].CreateFixture(fixDef);
+		
+		// create the red mat
+        bodyDef.type = phys.body.b2_dynamicBody;
+        bodyDef.userData = "red_mat";
+        bodyDef.position.Set(18.50,14);
+        this._mats.push( this._world.CreateBody(bodyDef) );
+        fixDef.isSensor = true;
+		fixDef.shape = new phys.polyShape;
+		fixDef.shape.SetAsBox(1,7); 
+        this._mats[1].CreateFixture(fixDef);
+        
+		// create some robots
         this.instructions = "Using " + this._numrobots + " robots (blue), " + " move an object (green) to the goal area (outlined) using the arrow keys (&#8592;,&#8593;,&#8595;,&#8594;)";
         if(this.mobileUserAgent){
             this.instructions = "Using " + this._numrobots + " robots (blue), " + " move an object (green) to the goal area (outlined) by tilting your screen (&#8592;,&#8593;,&#8595;,&#8594;)";
@@ -133,14 +150,47 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
         fixDef.isSensor = false;
         fixDef.shape = new phys.circleShape( this._robotRadius ); // radius .5 robots
         for(var i = 0; i < this._numrobots; ++i) {
+			// flag 
+			bodyDef.color = 'blue';
             bodyDef.position.x = (i%rowLength)*2.1*this._robotRadius + xoffset;
             bodyDef.position.y = Math.floor(i/rowLength)*2.1*this._robotRadius + yoffset;
             this._robots[i] = this._world.CreateBody(bodyDef);
-            this._robots[i].CreateFixture(fixDef);
+            this._robots[i].responseMode = 'blue';	// this is the response mode the robot is 
+			this._robots[i].CreateFixture(fixDef);
             this._robots[i].m_angularDamping = 10;
             this._robots[i].m_linearDamping = 10;  //should these be proportional to robot mass?
             //TODO: add units
         }
+		
+		// Contact Listener
+		var contactListener = new Box2D.Dynamics.b2ContactListener;
+        contactListener.BeginContact = function(contact, manifold) {
+			// triggers the red mat
+           if(   contact.m_fixtureA.m_body.m_userData == 'robot' &&
+                 contact.m_fixtureB.m_body.m_userData == 'red_mat')
+            {
+				contact.m_fixtureB.m_body.responseMode = 'red';
+            }
+           else if( contact.m_fixtureA.m_body.m_userData == 'red_mat' &&
+                 contact.m_fixtureB.m_body.m_userData == 'robot') 
+           { 
+			contact.m_fixtureB.m_body.responseMode = 'red';
+           }
+		   // triggers the blue mat
+		   else if(   contact.m_fixtureA.m_body.m_userData == 'robot' &&
+                 contact.m_fixtureB.m_body.m_userData == 'blue_mat')
+            {
+				contact.m_fixtureB.m_body.responseMode = 'blue';
+            }
+           else if( contact.m_fixtureA.m_body.m_userData == 'blue_mat' &&
+                 contact.m_fixtureB.m_body.m_userData == 'robot') 
+           { 
+			contact.m_fixtureB.m_body.responseMode = 'blue';
+           }
+		   
+		   
+        };
+        this._world.SetContactListener(contactListener);       
     },
 
     
@@ -171,6 +221,19 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
             var pos = g.GetPosition();
             drawutils.drawCircle( 30*pos.x, 30*pos.y,30*radius, that.colorGoal, that.strokeWidth );
         });
+		
+		// draw each mat
+        _.each(that._mats, function (g) { 
+            var f = g.GetFixtureList();
+            var pos = g.GetPosition();
+			var X = f.GetShape().GetVertices()[1].x - f.GetShape().GetVertices()[0].x; 
+            var Y = f.GetShape().GetVertices()[2].y - f.GetShape().GetVertices()[1].y;
+			var color = 'red';
+			if (g.GetUserData() == 'blue_mat'){
+				color = 'blue';
+			}
+			drawutils.drawRect(30*pos.x, 30*pos.y, 30* X, 30 * Y, color);
+        });
 
         //draw robots and obstacles
         for (b = this._world.GetBodyList() ; b; b = b.GetNext())
@@ -179,12 +242,15 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
             for(f = b.GetFixtureList(); f; f = f.GetNext()) {
                 if (b.GetUserData() == 'goal') {
                     continue; // we drew the goal earlier
+                }else if ((b.GetUserData() == 'red_mat') || (b.GetUserData() == 'blue_mat')) {
+                    continue; // already drawn!
                 }
                 if (b.GetUserData() == 'robot') {
                     // draw the robots
                     var radius = f.GetShape().GetRadius();
                     var pos = b.GetPosition();
-                    drawutils.drawRobot( 30*pos.x, 30*pos.y,angle, 30*radius, that.colorRobot,that.colorRobotEdge); 
+			
+                    drawutils.drawRobot( 30*pos.x, 30*pos.y,angle, 30*radius, b.responseMode,'black'); 
                 } else if (b.GetUserData() == 'workpiece') {
                     // draw the pushable object
                     var X = f.GetShape().GetVertices()[1].x - f.GetShape().GetVertices()[0].x; 
@@ -193,7 +259,7 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
                     var color = that.colorObject;
                     //drawutils.drawRect(30*pos.x, 30*pos.y, 30* X, 30 * Y, color,angle);
                     drawutils.drawPolygon(30*pos.x, 30*pos.y,30*2,6,angle,color);
-                } else {
+				} else {
                     //http://calebevans.me/projects/jcanvas/docs/polygons/
                     // draw the obstacles
                     var X = f.GetShape().GetVertices()[1].x - f.GetShape().GetVertices()[0].x; 
