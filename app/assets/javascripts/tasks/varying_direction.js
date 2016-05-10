@@ -320,31 +320,46 @@ var varyingDirectionTask = _.extend({}, baseTask, baseController, {
             drawutils.drawText(30*meanx,30*(meany+2),this._numrobots+" Robots", 1.5, color, color);
         }
 
-
     },
 
     // update function run every frame to update our robots
     update: function() {
         var that = this;
     	var maxImpTime = .2; //seconds to maximum impulse
-        that._impulseV.x = 0;
+		that._impulseV.x = 0;
         that._impulseV.y = 0;
+		// for red/blue bots
+		var impulseRedX = 0;	// Only X will have different behavior
+		var impulseBlueX = 0;
         var dateNow = new Date().getTime();
 
         if(that.keyL!=null){that._impulseV.x -= that._impulse*Math.min(1, .001*(dateNow-that.keyL)/maxImpTime);} 
         if(that.keyR!=null){that._impulseV.x += that._impulse*Math.min(1, .001*(dateNow-that.keyR)/maxImpTime);} 
         if(that.keyU!=null){that._impulseV.y -= that._impulse*Math.min(1, .001*(dateNow-that.keyU)/maxImpTime);} 
         if(that.keyD!=null){that._impulseV.y += that._impulse*Math.min(1, .001*(dateNow-that.keyD)/maxImpTime);} 
+		if(that.keyL!=null){impulseRedX += that._impulse*Math.min(1, .001*(dateNow-that.keyL)/maxImpTime);} // SIgns are backwards
+        if(that.keyR!=null){impulseRedX -= that._impulse*Math.min(1, .001*(dateNow-that.keyR)/maxImpTime);} 
 
+		
+		
         // moving at diagonal is no faster than moving sideways or up/down
         var normalizer = Math.min(1,that._impulse/Math.sqrt(that._impulseV.x*that._impulseV.x + that._impulseV.y*that._impulseV.y));
-        var forceScaler = normalizer*(that._robotRadius*0.5)/0.25;   
+		var forceScaler = normalizer*(that._robotRadius*0.5)/0.25;   
         //scale by robot size -- now scale by robot diameter (500 robots was SLOW).  These means we hose the first 26 results (bummer)
         that._impulseV.x *=  forceScaler;    
-        that._impulseV.y *=  forceScaler;  
-        // apply the user force to all the robots
+        that._impulseV.y *=  forceScaler; 
+		impulseRedX *= forceScaler;
+        impulseBlueX = that._impulseV.x;
+		// apply the user force to all the robots
         _.each( that._robots, function(r) { 
-            // Additional function to check which mode robot it in
+			// Set the correct impulse for red/blue
+			if (r.responseMode == 'red'){ // robot is red
+				that._impulseV.x = impulseRedX;	
+			}
+			else {
+				that._impulseV.x = impulseBlueX;
+			}
+			// Apply impulse
 			r.ApplyForce( that._impulseV, r.GetWorldPoint( that._zeroReferencePoint ) );
         } );
         // step the world, and then remove all pending forces
